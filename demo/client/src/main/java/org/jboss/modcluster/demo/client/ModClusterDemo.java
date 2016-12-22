@@ -58,6 +58,7 @@ public class ModClusterDemo {
     private static final int DEFAULT_SESSION_LIFE = 120;
     private static final int DEFAULT_SLEEP_TIME = 100;
     private static final int DEFAULT_STARTUP_TIME = 120;
+    private static final String DEFAULT_REQUEST_URL = "";
 
     private final RequestDriver requestDriver;
     private final ChartManager chartManager;
@@ -76,6 +77,8 @@ public class ModClusterDemo {
     private JTextField startupTimeField;
     private JTextField targetHostNameField;
     private JTextField targetPortField;
+    private JTextField urlField;
+    private JLabel urlLabel;
     private JLabel totalClientsLabel;
     private JLabel liveClientsLabel;
     private JLabel failedClientsLabel;
@@ -169,8 +172,8 @@ public class ModClusterDemo {
     private JPanel createClientControlPanel() {
         final JPanel controlPanel = new JPanel();
         GridBagLayout gridBagLayout = new GridBagLayout();
-        gridBagLayout.columnWidths = new int[] { 7, 0, 7, 0, 7, 0, 7, 7, 0, 0, 7 };
-        gridBagLayout.rowHeights = new int[] { 0, 7, 0, 7, 0, 7, 0, 7, 0, 7, 0 };
+        gridBagLayout.columnWidths = new int[] { 7, 0, 7, 0, 7, 0, 7, 7, 0, 0, 7, 0 ,7 };
+        gridBagLayout.rowHeights = new int[] { 0, 7, 0, 7, 0, 7, 0, 7, 0, 7, 0, 7, 0};
         controlPanel.setLayout(gridBagLayout);
 
         JLabel label = new JLabel();
@@ -336,6 +339,23 @@ public class ModClusterDemo {
         gridBagConstraints.fill = GridBagConstraints.HORIZONTAL;
         controlPanel.add(startupTimeField, gridBagConstraints);
 
+        label = new JLabel();
+        label.setText("URL:");
+        label.setToolTipText("URL to call");
+        gridBagConstraints = new GridBagConstraints();
+        gridBagConstraints.gridy = 10;
+        gridBagConstraints.gridx = 1;
+        controlPanel.add(label, gridBagConstraints);
+
+        urlField = new JTextField();
+        urlField.setText(String.valueOf(DEFAULT_REQUEST_URL));
+        gridBagConstraints = new GridBagConstraints();
+        gridBagConstraints.gridy = 10;
+        gridBagConstraints.gridx = 3;
+        gridBagConstraints.weightx = 1;
+        gridBagConstraints.fill = GridBagConstraints.HORIZONTAL;
+        controlPanel.add(urlField, gridBagConstraints);
+
         JButton startButton = new JButton();
         startButton.addActionListener(new ActionListener() {
             public void actionPerformed(final ActionEvent e) {
@@ -344,7 +364,7 @@ public class ModClusterDemo {
         });
         startButton.setText("Start");
         gridBagConstraints = new GridBagConstraints();
-        gridBagConstraints.gridy = 10;
+        gridBagConstraints.gridy = 12;
         gridBagConstraints.gridx = 1;
         gridBagConstraints.weighty = 3;
         gridBagConstraints.weightx = 1;
@@ -360,7 +380,7 @@ public class ModClusterDemo {
         });
         stopButton.setText("Stop");
         gridBagConstraints = new GridBagConstraints();
-        gridBagConstraints.gridy = 10;
+        gridBagConstraints.gridy = 12;
         gridBagConstraints.gridx = 6;
         gridBagConstraints.weighty = 2;
         gridBagConstraints.weightx = 1;
@@ -370,7 +390,7 @@ public class ModClusterDemo {
 
         JPanel statusPanel = new JPanel();
         gridBagConstraints = new GridBagConstraints();
-        gridBagConstraints.gridy = 11;
+        gridBagConstraints.gridy = 13;
         gridBagConstraints.gridx = 1;
         gridBagConstraints.weighty = 2;
         gridBagConstraints.weightx = 1;
@@ -780,19 +800,33 @@ public class ModClusterDemo {
 
         String tmp = createBaseURL(proxyHostNameField.getText(), proxyPortField.getText()) + "record";
         URL requestURL, destroyURL;
-        try {
-            if (invalidate) {
-                requestURL = new URL(tmp);
-                destroyURL = new URL(tmp + "?destroy=true");
-            } else {
-                String timeoutParam = (sessionTimeout > 0) ? "?timeout=" + String.valueOf(sessionTimeout) : "";
-                requestURL = new URL(tmp + timeoutParam);
-                destroyURL = requestURL;
+
+        if (urlField.getText()!=null && urlField.getText()!=""){
+            try {
+                requestURL = new URL(urlField.getText());
+                destroyURL = null;
+                invalidate = false;
+            } catch (MalformedURLException e) {
+                e.printStackTrace(System.err);
+                return;
             }
-        } catch (MalformedURLException e) {
-            e.printStackTrace(System.err);
-            return;
         }
+        else {
+            try {
+                if (invalidate) {
+                    requestURL = new URL(tmp);
+                    destroyURL = new URL(tmp + "?destroy=true");
+                } else {
+                    String timeoutParam = (sessionTimeout > 0) ? "?timeout=" + String.valueOf(sessionTimeout) : "";
+                    requestURL = new URL(tmp + timeoutParam);
+                    destroyURL = requestURL;
+                }
+            } catch (MalformedURLException e) {
+                e.printStackTrace(System.err);
+                return;
+            }
+        }
+
 
         int num_threads = DEFAULT_NUM_THREADS;
         String numT = numThreadsField.getText();
