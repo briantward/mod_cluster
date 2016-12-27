@@ -191,6 +191,7 @@ public class RequestDriver {
                 long sessionStart = System.currentTimeMillis();
                 long elapsed = 0;
                 boolean failed = false;
+                int thrownFailures = 0;
                 while ((elapsed < sessionLife) && !stopped.get()) {
                     try {
                         Thread.sleep(sleepTime);
@@ -198,13 +199,23 @@ public class RequestDriver {
                         break;
                     }
 
-                    rc = executeRequest(request_url);
-                    if (rc == 200) {
-                        elapsed = System.currentTimeMillis() - sessionStart;
-                    } else {
-                        failed = true;
-                        break;
+                    try {
+                        rc = executeRequest(request_url);
+                        if (rc == 200) {
+                            elapsed = System.currentTimeMillis() - sessionStart;
+                        } else {
+                            failed = true;
+                            break;
+                        }
+                    } catch (IOException e) {
+                        if (thrownFailures < 1){
+                            thrownFailures++;
+                            error("failure on response, retrying once", e);
+                        } else {
+                            break;
+                        }
                     }
+
                 }
 
                 if (!failed && destroy_url != null) {
