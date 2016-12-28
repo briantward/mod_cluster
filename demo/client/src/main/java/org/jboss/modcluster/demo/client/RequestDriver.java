@@ -212,6 +212,7 @@ public class RequestDriver {
                             thrownFailures++;
                             error("failure on response, retrying once", e);
                         } else {
+                            failed = true;
                             break;
                         }
                     }
